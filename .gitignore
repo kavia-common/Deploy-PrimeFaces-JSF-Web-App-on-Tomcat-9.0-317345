@@ -1,57 +1,63 @@
-#
-# Project specific excludes
-#
 
-tomcat
-
-#
-# Default excludes
-#
-
-# Binaries
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
-*.war
-*.ear
-*.sar
-*.class
-.metadata
-
-# Maven 
-target/
-
-# IntelliJ project files 
-*.iml
-*.iws
-*.ipr
-.idea/
-
-# eclipse project file
-.settings/
-.classpath
-.project
-
-# NetBeans specific
-nbproject/private/
+# Python ignorables
+logs/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
 build/
-nbbuild/
+develop-eggs/
 dist/
-nbdist/
-nbactions.xml
-nb-configuration.xml
+downloads/
+eggs/
+.eggs/
+lib64/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
+pip-log.txt
+pip-delete-this-directory.txt
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+venv/
+.env
+.env.*
 
-# OS
-.DS_Store
+# Ignore all directories containing pyvenv.cfg
+**/pyvenv.cfg
+**/*/pyvenv.cfg
 
-# Misc
-*.swp
-release.properties
-pom.xml.releaseBackup
-pom.xml.tag
+# Node.js ignorables
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnp/
+.pnp.js
+.env
+.env.test
+.cache/
+.next/
+.nuxt/
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
+.file_activity_report.json
+*.db
+core.*
+.core
+*.log
+post_process_status.lock
