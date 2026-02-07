@@ -6,11 +6,12 @@
 package com.microsoft.azure.samples.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class TodoItem implements Serializable {
 
-	private static final long serialVersionUID = 6437012982370705547L;
-	private Long id;
+\tprivate static final long serialVersionUID = 6437012982370705547L;
+\tprivate Long id;
     private String category;
     private String name;
     private boolean complete;
@@ -36,13 +37,45 @@ public class TodoItem implements Serializable {
                 id, category, name, complete);
     }
 
+    /**
+     * Equality is based on non-null id only.
+     *
+     * PrimeFaces DataTable selection commonly maps rows using rowKey. When the rowKey is the id
+     * (see index.xhtml: rowKey="#{item.id}"), having equals/hashCode consistent with that id helps
+     * avoid selection glitches when the table re-renders and different instances represent the
+     * same logical row.
+     *
+     * If id is null (should not happen for in-list items; ids are assigned on add), we intentionally
+     * treat the instance as not equal to any other instance except itself.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof TodoItem)) {
+            return false;
+        }
+        TodoItem other = (TodoItem) o;
+
+        if (this.id == null || other.id == null) {
+            return false;
+        }
+        return Objects.equals(this.id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        // Only non-null ids participate in hashing; otherwise fall back to identity hash semantics.
+        return (id == null) ? System.identityHashCode(this) : id.hashCode();
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
-        return;
     }
 
     public String getCategory() {
@@ -51,14 +84,11 @@ public class TodoItem implements Serializable {
 
     public void setCategory(String category) {
         this.category = category;
-        return;
     }
 
     public void setId(Long id) {
         this.id = id;
-        return;
     }
-
 
     public Long getId() {
         return id;
@@ -70,7 +100,6 @@ public class TodoItem implements Serializable {
 
     public void setComplete(boolean complete) {
         this.complete = complete;
-        return;
     }
 
 }
