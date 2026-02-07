@@ -10,6 +10,7 @@ import com.microsoft.azure.samples.model.TodoItem;
 import javax.enterprise.context.ApplicationScoped;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +25,13 @@ public class TodoItemManagementInMemory implements ItemManagement {
      */
     private CopyOnWriteArrayList<TodoItem> todoItems = new CopyOnWriteArrayList<TodoItem>();
 
+    /**
+     * Monotonic id generator to guarantee unique non-null IDs for new items.
+     *
+     * Note: because this is an in-memory demo DAO, a JVM restart resets ids.
+     */
+    private final AtomicLong nextId = new AtomicLong(0);
+
     public CopyOnWriteArrayList<TodoItem> getTodoItems() {
         return todoItems;
     }
@@ -31,6 +39,13 @@ public class TodoItemManagementInMemory implements ItemManagement {
     public void setTodoItems(CopyOnWriteArrayList<TodoItem> todoItems) {
         // Null-safety: never allow the internal list reference to be null.
         this.todoItems = (todoItems == null) ? new CopyOnWriteArrayList<>() : todoItems;
+
+        // Keep id generator aligned with any pre-populated data.
+        synchronized (this) {
+            long maxId = findMaxIdLocked();
+            // nextId holds "next value to hand out"
+            nextId.set(maxId + 1);
+        }
     }
 
     public void addTodoItem(TodoItem item) {
@@ -46,15 +61,16 @@ public class TodoItemManagementInMemory implements ItemManagement {
                 todoItems = new CopyOnWriteArrayList<>();
             }
 
-            int size = todoItems.size();
-            long id = 0;
-            if (size != 0) {
-                TodoItem last = todoItems.get(size - 1);
-                // Null-safety: if existing last id is missing, fall back to using size as a best-effort id.
-                Long lastId = (last == null) ? null : last.getId();
-                id = (lastId == null) ? size : (lastId + 1);
-            }
-            item.setId(id);
+            // Ensure a unique, non-null id for PrimeFaces rowKey=#{item.id}.
+            // If the incoming item already has an id, preserve it, but keep generator ahead to avoid duplicates.
+            Long existingId = item.getId();
+            long assignedId = (existingId != null) ? existingId : nextId.getAndIncrement();
+            item.setId(assignedId);
+
+            // If an explicit id was provided that's >= current nextId, advance generator.
+            // This avoids future collisions if a caller sets an id manually.
+            nextId.updateAndGet(cur -> Math.max(cur, assignedId + 1));
+
             todoItems.add(item);
         }
     }
@@ -122,5 +138,27 @@ public class TodoItemManagementInMemory implements ItemManagement {
             }
         }
         return -1;
+    }
+
+    /**
+     * Computes the maximum id currently present in the list.
+     * Must be called with the instance lock held (synchronized(this)).
+     */
+    private long findMaxIdLocked() {
+        if (todoItems == null || todoItems.isEmpty()) {
+            return -1;
+        }
+
+        long max = -1;
+        for (TodoItem existing : todoItems) {
+            if (existing == null) {
+                continue;
+            }
+            Long id = existing.getId();
+            if (id != null && id > max) {
+                max = id;
+            }
+        }
+        return max;
     }
 }

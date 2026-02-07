@@ -63,9 +63,14 @@ public class TodoListController implements Serializable {
 
     // PUBLIC_INTERFACE
     public void buttonAddAction() {
-        /** Adds a new todo item using the current input values. */
+        /** Adds a new todo item using the current input values and resets the input fields on success. */
         TodoItem addItem = new TodoItem(name, category, false);
         todoManagement.addTodoItem(addItem);
+
+        // Reset inputs so the UI clears after adding an item.
+        // This is compatible with index.xhtml bindings to #{todocontroller.name} and #{todocontroller.category}.
+        this.name = null;
+        this.category = null;
     }
 
     public void setSelectedItem(TodoItem selectedItem) {
