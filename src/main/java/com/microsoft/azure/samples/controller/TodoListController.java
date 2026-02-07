@@ -26,9 +26,7 @@ public class TodoListController implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Inject
-    TodoItemManagementInMemory todoManagement;
-
-    private List<TodoItem> todoItems;
+    private TodoItemManagementInMemory todoManagement;
 
     private TodoItem selectedItem;
     private List<TodoItem> selectedItems;
@@ -55,8 +53,8 @@ public class TodoListController implements Serializable {
         this.selectedItem = selectedItem;
     }
 
-    public List<TodoItem> getSelectedItem() {
-        return selectedItems;
+    public TodoItem getSelectedItem() {
+        return selectedItem;
     }
 
     public void setSelectedItems(List<TodoItem> selectedItems) {
