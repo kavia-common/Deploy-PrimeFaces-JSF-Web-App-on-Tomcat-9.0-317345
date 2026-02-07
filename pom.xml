@@ -1,62 +1,138 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>com.microsoft.azure.samples</groupId>
   <artifactId>azure-javaweb-app</artifactId>
   <packaging>war</packaging>
   <version>1.0-SNAPSHOT</version>
+
   <name>azure-javaweb-app Maven Webapp</name>
   <url>http://maven.apache.org</url>
+
   <properties>
+    <!-- Java 11 baseline for Tomcat 9 + modern library compatibility -->
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
+
     <failOnMissingWebXml>false</failOnMissingWebXml>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <!--
+      Dependency versions are centralized here to keep them explicit and easy to audit.
+      IMPORTANT: Keep javax.* namespace (no Jakarta) to avoid runtime-breaking changes on Tomcat 9 / Java EE 8 style apps.
+    -->
+    <!-- PrimeFaces: upgrade from 8.0 to maintained 10.x LTS (still javax.* / JSF 2.3 compatible). -->
+    <primefaces.version>10.0.0</primefaces.version>
+
+    <!-- JSF (Mojarra) implementation for Servlet containers (javax namespace). -->
+    <mojarra.version>2.3.9</mojarra.version>
+
+    <!-- Weld 3.x supports javax.* and works in servlet containers (Tomcat). -->
+    <weld.version>3.1.9.Final</weld.version>
+
+    <!-- Lombok newer 1.18.x for Java 11+ compatibility and fixes. -->
+    <lombok.version>1.18.30</lombok.version>
+
+    <!-- Test libs: Mockito 4.x is compatible with Java 11 and JUnit4 without requiring major test framework changes. -->
+    <junit.version>4.13.1</junit.version>
+    <mockito.version>4.11.0</mockito.version>
+
+    <!-- Enforcer plugin version (kept explicit). -->
+    <maven.enforcer.plugin.version>3.4.1</maven.enforcer.plugin.version>
   </properties>
+
   <dependencies>
+    <!-- Provided by Tomcat -->
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
       <version>4.0.1</version>
       <scope>provided</scope>
     </dependency>
+
+    <!-- Mojarra JSF 2.3 implementation (javax.*). Recommended stable line for Tomcat deployments. -->
     <dependency>
       <groupId>org.glassfish</groupId>
       <artifactId>javax.faces</artifactId>
-      <version>2.4.0</version>
+      <version>${mojarra.version}</version>
     </dependency>
+
+    <!-- PrimeFaces UI components (javax.* compatible in 10.x). -->
     <dependency>
       <groupId>org.primefaces</groupId>
       <artifactId>primefaces</artifactId>
-      <version>8.0</version>
+      <version>${primefaces.version}</version>
     </dependency>
+
+    <!-- CDI implementation for servlet containers (Tomcat). -->
     <dependency>
       <groupId>org.jboss.weld.servlet</groupId>
       <artifactId>weld-servlet</artifactId>
-      <version>2.4.8.Final</version>
+      <version>${weld.version}</version>
     </dependency>
+
+    <!-- Compile-time only -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.12</version>
+      <version>${lombok.version}</version>
       <scope>provided</scope>
     </dependency>
+
+    <!-- Tests -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.13.1</version>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>2.23.0</version>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
+
   <build>
     <finalName>azure-javaweb-app</finalName>
+
+    <plugins>
+      <!--
+        Minimal enforcement:
+        - Enforce Java 11 build runtime (avoids accidental Java 8 builds)
+        - Enforce dependency convergence to reduce classpath "jar hell"
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${maven.enforcer.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>enforce-java-and-dependencies</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[11,)</version>
+                </requireJavaVersion>
+
+                <!-- Ensures a single resolved version for each artifact across the dependency tree -->
+                <dependencyConvergence />
+              </rules>
+              <fail>true</fail>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 </project>
