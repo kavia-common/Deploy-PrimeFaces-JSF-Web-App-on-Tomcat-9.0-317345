@@ -34,20 +34,39 @@ public class TodoListController implements Serializable {
     private String name;
     private String category;
 
-
     public List<TodoItem> getTodoItems() {
         return todoManagement.getTodoItems();
     }
 
-    public void buttonUpdateAction(){
+    // PUBLIC_INTERFACE
+    public void buttonUpdateAction() {
+        /**
+         * Marks currently selected todo items as complete.
+         *
+         * Null-safety: PrimeFaces may leave the selection list as null when nothing is selected,
+         * so we must never call the DAO with a null list.
+         */
+        if (selectedItems == null || selectedItems.isEmpty()) {
+            // Optional UX feedback: inform the user that there is nothing to update.
+            FacesContext context = FacesContext.getCurrentInstance();
+            if (context != null) {
+                context.addMessage(
+                        null,
+                        new FacesMessage(FacesMessage.SEVERITY_INFO, "No tasks selected", "Please select one or more tasks to update.")
+                );
+            }
+            return;
+        }
+
         todoManagement.updateTodoItem(selectedItems);
     }
 
-    public void buttonAddAction(){
+    // PUBLIC_INTERFACE
+    public void buttonAddAction() {
+        /** Adds a new todo item using the current input values. */
         TodoItem addItem = new TodoItem(name, category, false);
         todoManagement.addTodoItem(addItem);
     }
-
 
     public void setSelectedItem(TodoItem selectedItem) {
         this.selectedItem = selectedItem;
@@ -61,20 +80,35 @@ public class TodoListController implements Serializable {
         this.selectedItems = selectedItems;
     }
 
-    public List<TodoItem> getSelectedItems(){
+    public List<TodoItem> getSelectedItems() {
         return selectedItems;
     }
 
+    // PUBLIC_INTERFACE
     public void onRowSelect(SelectEvent<TodoItem> event) {
+        /** PrimeFaces row select callback (kept for compatibility); null-safe. */
+        if (event == null || event.getObject() == null || event.getObject().getId() == null) {
+            return;
+        }
         FacesMessage msg = new FacesMessage("TodoItem Selected", event.getObject().getId().toString());
-        FacesContext.getCurrentInstance().addMessage(null, msg);
+        FacesContext context = FacesContext.getCurrentInstance();
+        if (context != null) {
+            context.addMessage(null, msg);
+        }
     }
 
+    // PUBLIC_INTERFACE
     public void onRowUnselect(UnselectEvent<TodoItem> event) {
-        FacesMessage msg = new FacesMessage("Car Unselected", event.getObject().getId().toString());
-        FacesContext.getCurrentInstance().addMessage(null, msg);
+        /** PrimeFaces row unselect callback (kept for compatibility); null-safe. */
+        if (event == null || event.getObject() == null || event.getObject().getId() == null) {
+            return;
+        }
+        FacesMessage msg = new FacesMessage("TodoItem Unselected", event.getObject().getId().toString());
+        FacesContext context = FacesContext.getCurrentInstance();
+        if (context != null) {
+            context.addMessage(null, msg);
+        }
     }
-
 
     public String getName() {
         return name;
